@@ -19,9 +19,15 @@ def divide(left: float, right: float) -> float:
     return left / right
 
 
+def modulo(left: float, right: float) -> float:
+    if right == 0:
+        raise ValueError("Cannot modulo by zero.")
+    return left % right
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Perform a basic calculation.")
-    parser.add_argument("operation", choices=("add", "subtract", "multiply", "divide"))
+    parser.add_argument("operation", choices=("add", "subtract", "multiply", "divide", "modulo"))
     parser.add_argument("left", type=float)
     parser.add_argument("right", type=float)
     arguments = parser.parse_args()
@@ -34,7 +40,10 @@ def main() -> int:
         result = multiply(arguments.left, arguments.right)
     else:
         try:
-            result = divide(arguments.left, arguments.right)
+            if arguments.operation == "divide":
+                result = divide(arguments.left, arguments.right)
+            else:
+                result = modulo(arguments.left, arguments.right)
         except ValueError as error:
             parser.error(str(error))
     print(f"{result:g}")
