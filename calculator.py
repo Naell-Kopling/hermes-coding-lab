@@ -1,4 +1,28 @@
 import argparse
+import os
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+HISTORY_FILE = PROJECT_ROOT / ".calculator_history"
+
+
+def read_history(history_path: Path = HISTORY_FILE) -> list[str]:
+    if not history_path.exists():
+        return []
+    return history_path.read_text(encoding="utf-8").splitlines()
+
+
+def record_history(
+    operation: str,
+    left: float,
+    right: float,
+    result: float,
+    history_path: Path = HISTORY_FILE,
+) -> None:
+    entry = f"{operation} {left:g} {right:g} = {result:g}\n"
+    with history_path.open("a", encoding="utf-8") as history_file:
+        history_file.write(entry)
 
 
 def add(left: float, right: float) -> float:
@@ -32,11 +56,33 @@ def power(left: float, right: float) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Perform a basic calculation.")
     parser.add_argument(
-        "operation", choices=("add", "subtract", "multiply", "divide", "modulo", "power")
+        "operation",
+        choices=(
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "modulo",
+            "power",
+            "history",
+        ),
     )
-    parser.add_argument("left", type=float)
-    parser.add_argument("right", type=float)
+    parser.add_argument("left", type=float, nargs="?")
+    parser.add_argument("right", type=float, nargs="?")
     arguments = parser.parse_args()
+    history_path = Path(
+        os.environ.get("CALCULATOR_HISTORY_FILE", str(HISTORY_FILE))
+    )
+
+    if arguments.operation == "history":
+        if arguments.left is not None or arguments.right is not None:
+            parser.error("history does not accept operands.")
+        for entry in read_history(history_path):
+            print(entry)
+        return 0
+
+    if arguments.left is None or arguments.right is None:
+        parser.error("left and right operands are required.")
 
     if arguments.operation == "add":
         result = add(arguments.left, arguments.right)
@@ -54,6 +100,13 @@ def main() -> int:
                 result = modulo(arguments.left, arguments.right)
         except ValueError as error:
             parser.error(str(error))
+    record_history(
+        arguments.operation,
+        arguments.left,
+        arguments.right,
+        result,
+        history_path,
+    )
     print(f"{result:g}")
     return 0
 
