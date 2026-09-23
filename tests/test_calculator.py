@@ -10,6 +10,7 @@ from calculator import (
     divide,
     modulo,
     multiply,
+    power,
     read_history,
     record_history,
     subtract,
@@ -35,6 +36,9 @@ class ArithmeticTests(unittest.TestCase):
 
     def test_returns_remainder_of_two_numbers(self):
         self.assertEqual(modulo(7, 3), 1)
+
+    def test_raises_number_to_power(self):
+        self.assertEqual(power(2, 3), 8)
 
     def test_rejects_modulo_by_zero(self):
         with self.assertRaisesRegex(ValueError, "Cannot modulo by zero"):
@@ -146,6 +150,13 @@ class CalculatorCliTests(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), "1")
         self.assertEqual(result.stderr, "")
 
+    def test_power_operation_prints_result(self):
+        result = self.run_cli("power", "2", "3")
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "8")
+        self.assertEqual(result.stderr, "")
+
     def test_rejects_non_numeric_operand(self):
         result = self.run_cli("add", "two", "3")
 
@@ -153,7 +164,7 @@ class CalculatorCliTests(unittest.TestCase):
         self.assertIn("invalid float value", result.stderr)
 
     def test_rejects_unknown_operation(self):
-        result = self.run_cli("power", "2", "3")
+        result = self.run_cli("square", "2", "3")
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid choice", result.stderr)

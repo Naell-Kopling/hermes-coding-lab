@@ -49,11 +49,23 @@ def modulo(left: float, right: float) -> float:
     return left % right
 
 
+def power(left: float, right: float) -> float:
+    return left**right
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Perform a basic calculation.")
     parser.add_argument(
         "operation",
-        choices=("add", "subtract", "multiply", "divide", "modulo", "history"),
+        choices=(
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "modulo",
+            "power",
+            "history",
+        ),
     )
     parser.add_argument("left", type=float, nargs="?")
     parser.add_argument("right", type=float, nargs="?")
@@ -78,6 +90,8 @@ def main() -> int:
         result = subtract(arguments.left, arguments.right)
     elif arguments.operation == "multiply":
         result = multiply(arguments.left, arguments.right)
+    elif arguments.operation == "power":
+        result = power(arguments.left, arguments.right)
     else:
         try:
             if arguments.operation == "divide":
