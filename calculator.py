@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 from pathlib import Path
 
@@ -16,11 +17,14 @@ def read_history(history_path: Path = HISTORY_FILE) -> list[str]:
 def record_history(
     operation: str,
     left: float,
-    right: float,
+    right: float | None,
     result: float,
     history_path: Path = HISTORY_FILE,
 ) -> None:
-    entry = f"{operation} {left:g} {right:g} = {result:g}\n"
+    if right is None:
+        entry = f"{operation} {left:g} = {result:g}\n"
+    else:
+        entry = f"{operation} {left:g} {right:g} = {result:g}\n"
     with history_path.open("a", encoding="utf-8") as history_file:
         history_file.write(entry)
 
@@ -53,6 +57,12 @@ def power(left: float, right: float) -> float:
     return left**right
 
 
+def square_root(value: float) -> float:
+    if value < 0:
+        raise ValueError("Cannot calculate square root of a negative number.")
+    return math.sqrt(value)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Perform a basic calculation.")
     parser.add_argument(
@@ -64,6 +74,7 @@ def main() -> int:
             "divide",
             "modulo",
             "power",
+            "sqrt",
             "history",
         ),
     )
@@ -79,6 +90,19 @@ def main() -> int:
             parser.error("history does not accept operands.")
         for entry in read_history(history_path):
             print(entry)
+        return 0
+
+    if arguments.operation == "sqrt":
+        if arguments.left is None:
+            parser.error("sqrt requires one operand.")
+        if arguments.right is not None:
+            parser.error("sqrt accepts exactly one operand.")
+        try:
+            result = square_root(arguments.left)
+        except ValueError as error:
+            parser.error(str(error))
+        record_history("sqrt", arguments.left, None, result, history_path)
+        print(f"{result:g}")
         return 0
 
     if arguments.left is None or arguments.right is None:
