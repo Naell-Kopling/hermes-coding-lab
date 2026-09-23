@@ -13,6 +13,7 @@ from calculator import (
     power,
     read_history,
     record_history,
+    square_root,
     subtract,
 )
 
@@ -39,6 +40,15 @@ class ArithmeticTests(unittest.TestCase):
 
     def test_raises_number_to_power(self):
         self.assertEqual(power(2, 3), 8)
+
+    def test_calculates_square_root(self):
+        self.assertEqual(square_root(9), 3)
+
+    def test_rejects_square_root_of_negative_number(self):
+        with self.assertRaisesRegex(
+            ValueError, "Cannot calculate square root of a negative number"
+        ):
+            square_root(-1)
 
     def test_rejects_modulo_by_zero(self):
         with self.assertRaisesRegex(ValueError, "Cannot modulo by zero"):
@@ -156,6 +166,41 @@ class CalculatorCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.strip(), "8")
         self.assertEqual(result.stderr, "")
+
+    def test_sqrt_operation_prints_result(self):
+        result = self.run_cli("sqrt", "9")
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "3")
+        self.assertEqual(result.stderr, "")
+
+    def test_sqrt_operation_is_saved_to_history(self):
+        result = self.run_cli("sqrt", "9")
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(self.history_path.read_text(encoding="utf-8"), "sqrt 9 = 3\n")
+
+    def test_sqrt_rejects_second_operand(self):
+        result = self.run_cli("sqrt", "9", "2")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("sqrt accepts exactly one operand", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_sqrt_requires_an_operand(self):
+        result = self.run_cli("sqrt")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("sqrt requires one operand", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_sqrt_rejects_negative_number_without_traceback(self):
+        result = self.run_cli("sqrt", "-1")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Cannot calculate square root of a negative number", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(self.history_path.exists())
 
     def test_rejects_non_numeric_operand(self):
         result = self.run_cli("add", "two", "3")
